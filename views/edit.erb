@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>edit</title>
+</head>
+<body>
+  <form action="/memo/<%= @memo_id %>/edit" method="POST">
+  <input type="hidden" name="_method" value="PATCH">
+  <div>
+    <input type="text" name="memo_title" value="<%= @memo_title %>" required class="input-title">
+  </div>
+  <div>
+    <textarea name="memo_text" rows="5" wrap="hard" class="input-text"><%= @memo_text %></textarea>
+  </div>
+  <div>
+    <input type="submit" value="変更" class="form-button">
+  </form>
+</body>
+</html>

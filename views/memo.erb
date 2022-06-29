@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sawarabi+Mincho&display=swap" rel="stylesheet">
+  <title><%= @memo_title %> -memo</title>
+</head>
+<body>
+  <div class="title">
+    <%= @memo_title %>
+  </div>
+  <div class="text">
+    <p style="white-space:pre-wrap;"><%= @memo_text %></p>
+  </div>
+  <div class ="form-buttons">
+    <form action="/memo/<%= @memo_id %>/edit" method="GET">
+      <div class="form-button">
+        <input type="submit" value="変更">
+      </div>
+    </form>
+    <form action="/memo/<%= @memo_id %>" method="POST">
+      <div class="form-button">
+        <input type="hidden" name="_method" value="DELETE">
+        <input type="submit" value="削除">
+      </div>
+    </form>
+    <form action="/" method="GET">
+      <div class="form-button">
+        <input type="submit" value="TOP">
+      </div>
+    </form>
+  </div>
+</body>
+</html>
