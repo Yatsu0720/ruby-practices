@@ -15,9 +15,13 @@ get '/' do
     JSON.parse(file.read)
   end
 
+<<<<<<< HEAD
   @title = 'メモアプリ'
 
   erb :index
+=======
+  erb :index, layout: :layout
+>>>>>>> 1879009 (loadメソッドからparseメソッドを使うように変更、bundleを追加)
 end
 
 get '/new' do
@@ -29,7 +33,11 @@ end
 get '/memos/:id' do
   @memo_id = params[:id]
 
+<<<<<<< HEAD
   @json_data = open('memo_data.json') do |file|
+=======
+  @json_data = File.open('memo_data.json') do |file|
+>>>>>>> 1879009 (loadメソッドからparseメソッドを使うように変更、bundleを追加)
     JSON.parse(file.read)
   end
 
@@ -44,10 +52,19 @@ end
 get '/memos/:id/edit' do
   @memo_id = params[:id]
 
+<<<<<<< HEAD
   @json_data = open('memo_data.json') do |file|
     JSON.parse(file.read)
   end
 
+=======
+  json_data = File.open('memo_data.json') do |file|
+    JSON.parse(file.read)
+  end
+
+  @json_data = json_data
+
+>>>>>>> 1879009 (loadメソッドからparseメソッドを使うように変更、bundleを追加)
   @memo_title = @json_data.fetch(@memo_id).keys[0]
   @memo_text = @json_data.fetch(@memo_id).fetch(@memo_title)
 
@@ -61,14 +78,22 @@ post '/' do
   @memo_text = h(params[:memo_text]).to_s
   @memo_id = h(params[:id]).to_s
 
+<<<<<<< HEAD
   @json_data = open('memo_data.json') do |file|
+=======
+  @json_data = File.open('memo_data.json') do |file|
+>>>>>>> 1879009 (loadメソッドからparseメソッドを使うように変更、bundleを追加)
     JSON.parse(file.read)
   end
 
   value = { @memo_title => @memo_text }
   @json_data[@memo_id] = value
 
+<<<<<<< HEAD
   open('memo_data.json', 'w') do |file|
+=======
+  File.open('memo_data.json', 'w') do |file|
+>>>>>>> 1879009 (loadメソッドからparseメソッドを使うように変更、bundleを追加)
     JSON.dump(@json_data, file)
   end
 
@@ -81,13 +106,21 @@ patch '/memos/:id/edit' do
   @memo_title = h(params[:memo_title]).to_s
   @memo_text = h(params[:memo_text]).to_s
 
+<<<<<<< HEAD
   @json_data = open('memo_data.json') do |file|
+=======
+  @json_data = File.open('memo_data.json') do |file|
+>>>>>>> 1879009 (loadメソッドからparseメソッドを使うように変更、bundleを追加)
     JSON.parse(file.read)
   end
 
   @json_data[@memo_id] = { @memo_title => @memo_text }
 
+<<<<<<< HEAD
   open('memo_data.json', 'w') do |file|
+=======
+  File.open('memo_data.json', 'w') do |file|
+>>>>>>> 1879009 (loadメソッドからparseメソッドを使うように変更、bundleを追加)
     JSON.dump(@json_data, file)
   end
 
@@ -99,7 +132,11 @@ end
 delete '/memos/:id' do
   @memo_id = params[:id]
 
+<<<<<<< HEAD
   json_data = open('memo_data.json') do |file|
+=======
+  json_data = File.open('memo_data.json') do |file|
+>>>>>>> 1879009 (loadメソッドからparseメソッドを使うように変更、bundleを追加)
     JSON.parse(file.read)
   end
 
