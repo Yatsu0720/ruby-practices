@@ -7,6 +7,7 @@ require 'webrick'
 require 'net/http'
 
 get '/' do
+  @title = 'メモアプリ'
   @memo_title = params[:memo_title]
   @memo_text = params[:memo_text]
   @memo_id = params[:id]
