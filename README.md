@@ -11,6 +11,7 @@ Sinatraを利用して作成した簡単なメモアプリです｡
 - `webrick`
 
 2. 以下のコマンドで起動します｡
+`bundle install`
 `bundle exec ruby memo_app.rb`
 
 3. http://localhost:4567 にアクセスし、メモアプリが利用できます｡
