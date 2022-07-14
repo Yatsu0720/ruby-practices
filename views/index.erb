@@ -1,9 +1,9 @@
-  <div>
-    <ul> 
-     <% @json_data.each do |key, value| %>
-          <%= '<li>' %>
-          <%= '<a href='+"http://localhost:4567/memo/#{key}>#{value.keys[0]}</a>" %>
-          <%= '</li>' %>
-     <% end %>    
-    </ul>
-  </div>
+<div>
+  <ul> 
+   <% @json_data.each do |key, value| %>
+        <%= '<li>' %>
+        <%= '<a href='+"http://localhost:4567/memos/#{key}>#{value.keys[0]}</a>" %>
+        <%= '</li>' %>
+   <% end %>    
+  </ul>
+</div>

@@ -1,12 +1,5 @@
-<!DOCTYPE html>
-<html>
-  <head> 
-    <title>New memo - メモアプリ</title>
-    <meta charset="UTF-8">
-  </head>
-
-  <body>
-    <form action="/" method="POST">
+<div>
+  <form action="/" method="POST">
     <div>
       <input type="hidden" name="id" value="<%= Time.now.strftime("%Y%m%d%H%M%S%N") %>">
     </div>
@@ -19,9 +12,6 @@
     <div>
       <input type="submit" value="保存" class="form-button">
     </div>
-    </form>
-  </body>
-</html>
-
-
+  </form>
+</div>
 

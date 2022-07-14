@@ -7,7 +7,6 @@ require 'webrick'
 require 'net/http'
 
 get '/' do
-  @title = 'メモアプリ'
   @memo_title = params[:memo_title]
   @memo_text = params[:memo_text]
   @memo_id = params[:id]
@@ -16,19 +15,19 @@ get '/' do
     JSON.parse(file.read)
   end
 
-  erb :index, layout: :layout
+  @title = 'メモアプリ'
+
+  erb :index
 end
 
 get '/new' do
+  @title = '新規登録'
+
   erb :new_memo
 end
 
-get '/memo' do
-  erb :memo
-end
-
-get '/memo/:name' do
-  @memo_id = params[:name]
+get '/memos/:id' do
+  @memo_id = params[:id]
 
   @json_data = open('memo_data.json') do |file|
     JSON.parse(file.read)
@@ -37,11 +36,13 @@ get '/memo/:name' do
   @memo_title = @json_data.fetch(@memo_id).keys[0]
   @memo_text = @json_data.fetch(@memo_id).fetch(@memo_title)
 
+  @title = @memo_title 
+
   erb :memo
 end
 
-get '/memo/:name/edit' do
-  @memo_id = params[:name]
+get '/memos/:id/edit' do
+  @memo_id = params[:id]
 
   @json_data = open('memo_data.json') do |file|
     JSON.parse(file.read)
@@ -50,6 +51,8 @@ get '/memo/:name/edit' do
   @memo_title = @json_data.fetch(@memo_id).keys[0]
   @memo_text = @json_data.fetch(@memo_id).fetch(@memo_title)
 
+  @title = "Edit:" + @memo_title 
+    
   erb :edit
 end
 
@@ -72,8 +75,8 @@ post '/' do
   erb :index
 end
 
-patch '/memo/:name/edit' do
-  @memo_id = params[:name]
+patch '/memos/:id/edit' do
+  @memo_id = params[:id]
 
   @memo_title = h(params[:memo_title]).to_s
   @memo_text = h(params[:memo_text]).to_s
@@ -88,13 +91,13 @@ patch '/memo/:name/edit' do
     JSON.dump(@json_data, file)
   end
 
-  redirect "/memo/#{@memo_id}"
+  redirect "/memos/#{@memo_id}"
 
   erb :edit
 end
 
-delete '/memo/:name' do
-  @memo_id = params[:name]
+delete '/memos/:id' do
+  @memo_id = params[:id]
 
   json_data = open('memo_data.json') do |file|
     JSON.parse(file.read)
