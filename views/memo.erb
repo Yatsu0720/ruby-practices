@@ -2,7 +2,7 @@
   <%= @memo_title %>
 </div>
 <div class="text">
-  <p style="white-space:pre-wrap;"><%= @memo_text %></p>
+  <p style="white-space:pre-wrap;"><%= @memo_body %></p>
 </div>
 <div class ="form-buttons">
   <form action="/memos/<%= @memo_id %>/edit" method="GET">
@@ -16,7 +16,7 @@
       <input type="submit" value="削除">
     </div>
   </form>
-  <form action="/" method="GET">
+  <form action="/memos" method="GET">
     <div class="form-button">
       <input type="submit" value="TOP">
     </div>

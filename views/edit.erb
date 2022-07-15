@@ -1,12 +1,12 @@
 <div>
-  <form action="/memos/<%= @memo_id %>/edit" method="POST">
+  <form action="/memos/<%= @memo_id %>" method="POST">
   <input type="hidden" name="_method" value="PATCH">
   <div>
     <input type="text" name="memo_title" value="<%= @memo_title %>" required class="input-title">
   </div>
 
   <div>
-    <textarea name="memo_text" rows="5" wrap="hard" class="input-text"><%= @memo_text %></textarea>
+    <textarea name="memo_body" rows="5" wrap="hard" class="input-text"><%= @memo_body %></textarea>
   </div>
   <div>
     <input type="submit" value="変更" class="form-button">

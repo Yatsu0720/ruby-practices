@@ -6,25 +6,19 @@ require 'json'
 require 'webrick'
 require 'net/http'
 
-get '/' do
-  @memo_title = params[:memo_title]
-  @memo_text = params[:memo_text]
-  @memo_id = params[:id]
+MEMO_DATA = 'memo_data.json'
 
-  @json_data = File.open('memo_data.json') do |file|
+get '/memos' do
+  @json_data = File.open(MEMO_DATA) do |file|
     JSON.parse(file.read)
   end
 
-<<<<<<< HEAD
   @title = 'メモアプリ'
 
-  erb :index
-=======
   erb :index, layout: :layout
->>>>>>> 1879009 (loadメソッドからparseメソッドを使うように変更、bundleを追加)
 end
 
-get '/new' do
+get '/memos/new' do
   @title = '新規登録'
 
   erb :new_memo
@@ -33,18 +27,19 @@ end
 get '/memos/:id' do
   @memo_id = params[:id]
 
-<<<<<<< HEAD
-  @json_data = open('memo_data.json') do |file|
-=======
-  @json_data = File.open('memo_data.json') do |file|
->>>>>>> 1879009 (loadメソッドからparseメソッドを使うように変更、bundleを追加)
+  @json_data = File.open(MEMO_DATA) do |file|
     JSON.parse(file.read)
   end
 
-  @memo_title = @json_data.fetch(@memo_id).keys[0]
-  @memo_text = @json_data.fetch(@memo_id).fetch(@memo_title)
+  @memo = @json_data[@memo_id]
+  @memo_title = @memo["title"]
+  @memo_body = @memo["body"]
 
-  @title = @memo_title 
+  @title = @memo_title
+
+  @memo = @json_data[@memo_id]
+  @memo_title = @memo["title"]
+  @memo_body = @memo["body"]
 
   erb :memo
 end
@@ -52,75 +47,49 @@ end
 get '/memos/:id/edit' do
   @memo_id = params[:id]
 
-<<<<<<< HEAD
-  @json_data = open('memo_data.json') do |file|
+  @json_data = open(MEMO_DATA) do |file|
     JSON.parse(file.read)
   end
 
-=======
-  json_data = File.open('memo_data.json') do |file|
-    JSON.parse(file.read)
-  end
-
-  @json_data = json_data
-
->>>>>>> 1879009 (loadメソッドからparseメソッドを使うように変更、bundleを追加)
-  @memo_title = @json_data.fetch(@memo_id).keys[0]
-  @memo_text = @json_data.fetch(@memo_id).fetch(@memo_title)
+  @memo = @json_data[@memo_id]
+  @memo_title = @memo["title"]
+  @memo_body = @memo["body"]
 
   @title = "Edit:" + @memo_title 
     
   erb :edit
 end
 
-post '/' do
+post '/memos' do
   @memo_title = h(params[:memo_title]).to_s
-  @memo_text = h(params[:memo_text]).to_s
+  @memo_body = h(params[:memo_body]).to_s
   @memo_id = h(params[:id]).to_s
 
-<<<<<<< HEAD
-  @json_data = open('memo_data.json') do |file|
-=======
-  @json_data = File.open('memo_data.json') do |file|
->>>>>>> 1879009 (loadメソッドからparseメソッドを使うように変更、bundleを追加)
+  @json_data = File.open(MEMO_DATA) do |file|
     JSON.parse(file.read)
   end
 
-  value = { @memo_title => @memo_text }
-  @json_data[@memo_id] = value
+  @json_data[@memo_id] = { "title" => @memo_title, "body" => @memo_body }
 
-<<<<<<< HEAD
-  open('memo_data.json', 'w') do |file|
-=======
-  File.open('memo_data.json', 'w') do |file|
->>>>>>> 1879009 (loadメソッドからparseメソッドを使うように変更、bundleを追加)
+  File.open(MEMO_DATA, 'w') do |file|
     JSON.dump(@json_data, file)
   end
 
   erb :index
 end
 
-patch '/memos/:id/edit' do
-  @memo_id = params[:id]
-
+patch '/memos/:id' do
+  @memo_id = h(params[:id])
   @memo_title = h(params[:memo_title]).to_s
-  @memo_text = h(params[:memo_text]).to_s
-
-<<<<<<< HEAD
-  @json_data = open('memo_data.json') do |file|
-=======
-  @json_data = File.open('memo_data.json') do |file|
->>>>>>> 1879009 (loadメソッドからparseメソッドを使うように変更、bundleを追加)
+  @memo_body = h(params[:memo_body]).to_s
+  
+  @json_data = File.open(MEMO_DATA) do |file|
     JSON.parse(file.read)
   end
 
-  @json_data[@memo_id] = { @memo_title => @memo_text }
+  @json_data[@memo_id] = { "title" => @memo_title, "body" => @memo_body }
 
-<<<<<<< HEAD
-  open('memo_data.json', 'w') do |file|
-=======
-  File.open('memo_data.json', 'w') do |file|
->>>>>>> 1879009 (loadメソッドからparseメソッドを使うように変更、bundleを追加)
+  File.open(MEMO_DATA, 'w') do |file|
     JSON.dump(@json_data, file)
   end
 
@@ -132,11 +101,7 @@ end
 delete '/memos/:id' do
   @memo_id = params[:id]
 
-<<<<<<< HEAD
-  json_data = open('memo_data.json') do |file|
-=======
-  json_data = File.open('memo_data.json') do |file|
->>>>>>> 1879009 (loadメソッドからparseメソッドを使うように変更、bundleを追加)
+  json_data = File.open(MEMO_DATA) do |file|
     JSON.parse(file.read)
   end
 
@@ -144,11 +109,11 @@ delete '/memos/:id' do
 
   @json_data = json_data
 
-  open('memo_data.json', 'w') do |file|
+  open(MEMO_DATA, 'w') do |file|
     JSON.dump(json_data, file)
   end
 
-  redirect '/'
+  redirect '/memos'
 
   erb :index
 end

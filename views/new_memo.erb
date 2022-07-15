@@ -1,5 +1,5 @@
 <div>
-  <form action="/" method="POST">
+  <form action="/memos" method="POST">
     <div>
       <input type="hidden" name="id" value="<%= Time.now.strftime("%Y%m%d%H%M%S%N") %>">
     </div>
@@ -7,7 +7,7 @@
       <input type="text" name="memo_title" required="" class="input-title">
     </div> 
     <div>
-      <textarea id="memo" name="memo_text" rows="5" wrap="hard"  class="input-text"></textarea>
+      <textarea id="memo" name="memo_body" rows="5" wrap="hard"  class="input-text"></textarea>
     </div>
     <div>
       <input type="submit" value="保存" class="form-button">
