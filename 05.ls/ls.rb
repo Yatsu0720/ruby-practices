@@ -25,13 +25,12 @@ MAX_COLUMN = 3
 end
 
 def fetch_file_list
-  ll_display = []
+  long_format_files = []
   file_state_chars = []
   hard_links = []   
   user_names = []
   group_names = []
   file_sizes = []
-  timestamps = [] 
 
   options = ARGV.getopts('l')
   ls_dir = ARGV[0] || '.'
@@ -53,21 +52,19 @@ def fetch_file_list
 
     file_state_chars = file_type + correspondence_table[file_state_array[3]] + correspondence_table[file_state_array[4]] + correspondence_table[file_state_array[5]]
     
-    ll_display << {file_state: file_state_chars, hard_link: file_state.nlink.to_s, user_name: Etc.getpwuid(file_state.uid).name, group_name: Etc.getgrgid(file_state.gid).name, file_size: file_state.size.to_s, timestamps: file_state.mtime.strftime('%b %d %R')}
+    long_format_files << {file_state: file_state_chars, hard_link: file_state.nlink.to_s, user_name: Etc.getpwuid(file_state.uid).name, group_name: Etc.getgrgid(file_state.gid).name, file_size: file_state.size.to_s, timestamps: file_state.mtime.strftime('%b %d %R'), file_name: file_list}
   end
- 
- # max_hard_link = hard_links.max_by { |hard_link| hard_link.length }.length
- # max_user_name = user_names.max_by { |user_name| user_name.length }.length 
- # max_group_name = group_names.max_by { |group_name| group_name.length }.length 
- # max_file_size = file_sizes.max_by { |file_size| file_size.length }.length
- # max_timestamps = timestamps.max_by {|timestamp| timestamp.length }.length
+  max_hard_link = long_format_files.map { |x| x[:hard_link] }.max_by { |hard_link| hard_link.length }.length
+  max_user_name = long_format_files.map { |x| x[:user_name] }.max_by { |user_name| user_name.length }.length
+  max_group_name = long_format_files.map { |x| x[:group_name] }.max_by { |group_name| group_name.length }.length
+  max_file_size = long_format_files.map { |x| x[:file_size] }.max_by { |file_size| file_size.length }.length
+  j
   
  # hard_links_array = hard_links.map {|hard_link| hard_link.rjust(max_hard_link, ' ')}
  # user_names_array = user_names.map{|user_name| user_name.rjust(max_user_name, ' ')}
  # group_names_array = group_names.map{|group_name| group_name.rjust(max_group_name, ' ')}
  # file_sizes_array = file_sizes.map{ |file_size| file_size.rjust(max_file_size, ' ')}
 
-  binding.irb
 
   # if options['r']
       
