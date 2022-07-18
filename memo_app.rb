@@ -32,14 +32,10 @@ get '/memos/:id' do
   end
 
   @memo = @json_data[@memo_id]
-  @memo_title = @memo["title"]
-  @memo_body = @memo["body"]
+  @memo_title = @memo['title']
+  @memo_body = @memo['body']
 
   @title = @memo_title
-
-  @memo = @json_data[@memo_id]
-  @memo_title = @memo["title"]
-  @memo_body = @memo["body"]
 
   erb :memo
 end
@@ -47,16 +43,16 @@ end
 get '/memos/:id/edit' do
   @memo_id = params[:id]
 
-  @json_data = open(MEMO_DATA) do |file|
+  @json_data = File.open(MEMO_DATA) do |file|
     JSON.parse(file.read)
   end
 
   @memo = @json_data[@memo_id]
-  @memo_title = @memo["title"]
-  @memo_body = @memo["body"]
+  @memo_title = @memo['title']
+  @memo_body = @memo['body']
 
-  @title = "Edit:" + @memo_title 
-    
+  @title = "Edit:#{@memo_title}"
+
   erb :edit
 end
 
@@ -69,7 +65,7 @@ post '/memos' do
     JSON.parse(file.read)
   end
 
-  @json_data[@memo_id] = { "title" => @memo_title, "body" => @memo_body }
+  @json_data[@memo_id] = { 'title' => @memo_title, 'body' => @memo_body }
 
   File.open(MEMO_DATA, 'w') do |file|
     JSON.dump(@json_data, file)
@@ -82,12 +78,12 @@ patch '/memos/:id' do
   @memo_id = h(params[:id])
   @memo_title = h(params[:memo_title]).to_s
   @memo_body = h(params[:memo_body]).to_s
-  
+
   @json_data = File.open(MEMO_DATA) do |file|
     JSON.parse(file.read)
   end
 
-  @json_data[@memo_id] = { "title" => @memo_title, "body" => @memo_body }
+  @json_data[@memo_id] = { 'title' => @memo_title, 'body' => @memo_body }
 
   File.open(MEMO_DATA, 'w') do |file|
     JSON.dump(@json_data, file)
@@ -109,7 +105,7 @@ delete '/memos/:id' do
 
   @json_data = json_data
 
-  open(MEMO_DATA, 'w') do |file|
+  File.open(MEMO_DATA, 'w') do |file|
     JSON.dump(json_data, file)
   end
 
