@@ -1,8 +1,8 @@
 <div>
   <ul> 
-   <% @json_data.each do |key, value| %>
+   <% @memo_data.each do |id| %>
         <%= '<li>' %>
-          <%= '<a href='+"http://localhost:4567/memos/#{key}>#{value["title"]}</a>" %>
+          <%= '<a href='+"http://localhost:4567/memos/#{id["memo_id"]}>#{id["memo_title"]}</a>" %>
         <%= '</li>' %>
    <% end %>    
   </ul>

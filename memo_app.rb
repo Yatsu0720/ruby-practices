@@ -4,13 +4,17 @@ require 'sinatra'
 require 'sinatra/reloader'
 require 'json'
 require 'webrick'
-require 'net/http'
+require 'pg'
 
-MEMO_DATA = 'memo_data.json'
+db = 'memos'
+
+conn = PG.connect(dbname: db)
 
 get '/memos' do
-  @json_data = File.open(MEMO_DATA) do |file|
-    JSON.parse(file.read)
+  conn.exec('SELECT * FROM memo_data') do |result|
+    @memo_data = result.map do |row|
+      row
+    end
   end
 
   @title = 'メモアプリ'
@@ -27,13 +31,11 @@ end
 get '/memos/:id' do
   @memo_id = params[:id]
 
-  @json_data = File.open(MEMO_DATA) do |file|
-    JSON.parse(file.read)
+  conn.exec('SELECT * FROM memo_data WHERE memo_id = $1', [@memo_id.to_s]) do |result|
+    @memo_data = result.map { |row| row }
   end
-
-  @memo = @json_data[@memo_id]
-  @memo_title = @memo['title']
-  @memo_body = @memo['body']
+  @memo_title = @memo_data[0]['memo_title']
+  @memo_body = @memo_data[0]['memo_body']
 
   @title = @memo_title
 
@@ -43,13 +45,12 @@ end
 get '/memos/:id/edit' do
   @memo_id = params[:id]
 
-  @json_data = File.open(MEMO_DATA) do |file|
-    JSON.parse(file.read)
+  conn.exec('SELECT * FROM memo_data WHERE memo_id = $1', [@memo_id.to_s]) do |result|
+    @memo_data = result.map { |row| row }
   end
 
-  @memo = @json_data[@memo_id]
-  @memo_title = @memo['title']
-  @memo_body = @memo['body']
+  @memo_title = @memo_data[0]['memo_title']
+  @memo_body = @memo_data[0]['memo_body']
 
   @title = "Edit:#{@memo_title}"
 
@@ -61,15 +62,9 @@ post '/memos' do
   @memo_body = h(params[:memo_body]).to_s
   @memo_id = h(params[:id]).to_s
 
-  @json_data = File.open(MEMO_DATA) do |file|
-    JSON.parse(file.read)
-  end
+  conn.exec("INSERT INTO memo_data (memo_title, memo_body, memo_id)  VALUES ( '#{@memo_title}', '#{@memo_body}', '#{@memo_id}');")
 
-  @json_data[@memo_id] = { 'title' => @memo_title, 'body' => @memo_body }
-
-  File.open(MEMO_DATA, 'w') do |file|
-    JSON.dump(@json_data, file)
-  end
+  redirect '/memos'
 
   erb :index
 end
@@ -79,15 +74,9 @@ patch '/memos/:id' do
   @memo_title = h(params[:memo_title]).to_s
   @memo_body = h(params[:memo_body]).to_s
 
-  @json_data = File.open(MEMO_DATA) do |file|
-    JSON.parse(file.read)
-  end
-
-  @json_data[@memo_id] = { 'title' => @memo_title, 'body' => @memo_body }
-
-  File.open(MEMO_DATA, 'w') do |file|
-    JSON.dump(@json_data, file)
-  end
+  conn.exec_params(
+    'UPDATE memo_data SET memo_title = $1, memo_body = $2 WHERE memo_id = $3', [@memo_title.to_s, @memo_body.to_s, @memo_id.to_s]
+  )
 
   redirect "/memos/#{@memo_id}"
 
@@ -97,16 +86,8 @@ end
 delete '/memos/:id' do
   @memo_id = params[:id]
 
-  json_data = File.open(MEMO_DATA) do |file|
-    JSON.parse(file.read)
-  end
-
-  json_data.delete(@memo_id)
-
-  @json_data = json_data
-
-  File.open(MEMO_DATA, 'w') do |file|
-    JSON.dump(json_data, file)
+  conn.exec('DELETE FROM memo_data WHERE memo_id = $1', [@memo_id.to_s]) do |result|
+    @memo_data = result.map { |row| row }
   end
 
   redirect '/memos'
