@@ -5,105 +5,94 @@ require 'optparse'
 require 'etc'
 
 MAX_COLUMN = 3
-CORRESPONDENCE_TABLE = {'0'=> '---', '1' => '--x', '2' => '-w-', '3' => '-wx', '4' => 'r--', '5' => 'r-x', '6' => 'rw-', '7' => 'rwx'}
+PERMISSION_CONVERSION = { '0' => '---', '1' => '--x', '2' => '-w-', '3' => '-wx', '4' => 'r--', '5' => 'r-x', '6' => 'rw-', '7' => 'rwx' }.freeze
+FILE_STAT_CONVERSION = { '10' => '-', '04' => 'd', '12' => 'l' }.freeze
 
-def print_file_list
-  if fetch_command[0]['l']
-    fetch_file
-  else
-    output_normal
-  end
-end
-
-def output_normal
-  max_word_count = fetch_file_list.max_by(&:length).length
-  max_row = fetch_file_list.size / MAX_COLUMN + 1
-
-  separated_list = fetch_file_list.each_slice(max_row).to_a
-
-  formatted_list = separated_list.map do |file_names|
-    file_names.values_at(0..max_row - 1).map do |file_name|
-    file_name.to_s.ljust(5 + max_word_count) 
-  end
-end
-
-   puts formatted_list.transpose.map(&:join)
-
-end
-
-def fetch_file
-  long_format_files = []
-  file_state_chars = []
-  hard_links = []   
-  user_names = []
-  group_names = []
-  file_sizes = []
-
-  number_of_files = fetch_file_list.size
-
-  fetch_file_list.each_with_index do |file, integer|
-    file_state = File.stat( fetch_command[1] + '/' + file)
-    
-    file_state_array = file_state.mode.to_s(8).rjust(6, '0').split('')
-    file_type = if file_state_array[0] + file_state_array[1] == '10'
-                  '-'
-                elsif file_state_array[0] + file_state_array[1] == '04'
-                  'd'
-                else
-                  'l'
-                end
-        
-
-    file_state_chars = file_type + CORRESPONDENCE_TABLE[file_state_array[3]] + CORRESPONDENCE_TABLE[file_state_array[4]] + CORRESPONDENCE_TABLE[file_state_array[5]]
-    
-    max_hard_lin = [] << file_state.nlink.to_s
-
-
-
-    long_format_files << {file_blocks_size: file_state.blocks, file_state: file_state_chars, hard_link: file_state.nlink.to_s, user_name: Etc.getpwuid(file_state.uid).name, group_name: Etc.getgrgid(file_state.gid).name, file_size: file_state.size.to_s, timestamps: file_state.mtime.strftime('%b %d %R'), file_name: fetch_file_list[integer]}
-  end
- 
-  max_hard_link = long_format_files.map { |x| x[:hard_link] }.max_by { |hard_link| hard_link.length }.length
-  max_user_name = long_format_files.map { |x| x[:user_name] }.max_by { |user_name| user_name.length }.length
-  max_group_name = long_format_files.map { |x| x[:group_name] }.max_by { |group_name| group_name.length }.length
-  max_file_size = long_format_files.map { |x| x[:file_size] }.max_by { |file_size| file_size.length }.length
-  max_file_name = long_format_files.map { |long_format_file| long_format_file[:file_name] }.max_by { |file_name| file_name.length }.length
- 
-  file_states_array = long_format_files.map{ |long_format_file| long_format_file[:file_state] }
-     
-  hard_links_array = long_format_files.map { |long_format_file| long_format_file[:hard_link]}
-  rjust_hard_links_array = hard_links_array.map {|hard_link| hard_link.rjust(max_hard_link, ' ') }
- 
-  user_names_array = long_format_files.map { |long_format_file| long_format_file[:user_name]}
-  rjust_user_names_array = user_names_array.map {|user_name| user_name.rjust(max_user_name, ' ')}
-
-  group_names_array = long_format_files.map{ |long_format_file| long_format_file[:group_name]}
-  rjust_group_names_array = group_names_array.map {|group_name| group_name.rjust(max_group_name + 1, ' ')}
-
-  file_sizes_array = long_format_files.map{ |long_format_file| long_format_file[:file_size] } 
-  rjust_file_sizes_array = file_sizes_array.map{ |file_size| file_size.rjust(max_file_size + 1, ' ')}
-
-  timestamps_array = long_format_files.map{ |long_format_file| long_format_file[:timestamps] }
-
-  file_names_array = long_format_files.map{ |long_format_file| long_format_file[:file_name] }
-  ljust_file_names_array = file_names_array.map{ |file_name| file_name.ljust(max_file_name, ' ')}
-  
-  long_format_files_array = [file_states_array, rjust_hard_links_array, rjust_user_names_array, rjust_group_names_array, rjust_file_sizes_array, timestamps_array, ljust_file_names_array].transpose 
-
-  puts ('total ' + long_format_files.sum{ |i| i[:file_blocks_size] }.to_s)
-
-  long_format_files_array.each { |long_format_file| puts(long_format_file.join(' '))}
-end
-
-def fetch_file_list
-  file_list = Dir.foreach(fetch_command[1]).to_a.reject { |file_name| file_name.start_with?('.') }.sort
-end
-
-def fetch_command
+def main
   options = ARGV.getopts('l')
-  ls_dir = ARGV[0] || '.'
-
-  return options, ls_dir
+  if options['l']
+    puts("total #{fetch_long_format_list.sum { |block_size| block_size[:blocks_size] }}")
+    transpose_list
+  else
+    output_no_option
+  end
 end
 
-print_file_list
+def output_no_option
+  max_word_of_characters = fetch_file_name_list.max_by(&:length).length
+  max_row = fetch_file_name_list.size / MAX_COLUMN + 1
+
+  separated_list = fetch_file_name_list.each_slice(max_row).to_a
+
+  formatted_list = separated_list.map do |file_name_list|
+    file_name_list.values_at(0..max_row - 1).map do |file_name|
+      file_name.to_s.ljust(5 + max_word_of_characters)
+    end
+  end
+  puts formatted_list.transpose.map(&:join)
+end
+
+def transpose_list
+  ljust_file_name = classify_list(:file_name).map { |file_name| file_name.ljust(0) }
+  long_format_list = [rjust_list_one_space(:permission), rjust_list_one_space(:hard_link), rjust_list_one_space(:user),
+                      rjust_list_two_space(:group), rjust_list_two_space(:file_size), rjust_list_one_space(:time), ljust_file_name].transpose
+
+  long_format_list.each { |long_format_file| puts(long_format_file.join(' ')) }
+end
+
+def rjust_list_one_space(key)
+  classified_list = classify_list(key)
+
+  maximum_number_of_characters = classified_list.max_by(&:length).length.to_i
+
+  classified_list.map { |item| item.rjust(maximum_number_of_characters, ' ') }
+end
+
+def rjust_list_two_space(key)
+  classified_list = classify_list(key)
+
+  maximum_number_of_characters = classified_list.max_by(&:length).length.to_i
+  classified_list.map { |item| item.rjust(maximum_number_of_characters + 1, ' ') }
+end
+
+def classify_list(key)
+  hash = fetch_long_format_list
+
+  classified_list = []
+
+  hash.each_with_index do |_x, i|
+    classified_list << hash[i][key]
+  end
+  classified_list
+end
+
+def fetch_long_format_list
+  long_format_list = []
+
+  fetch_file_name_list.each do |file|
+    file_stat = File.stat("#{fetch_directory}/#{file}")
+    stat_numbers = file_stat.mode.to_s(8).rjust(6, '0').split('')
+    file_type = FILE_STAT_CONVERSION[stat_numbers[0] + stat_numbers[1]]
+    file_stat_chars = file_type + PERMISSION_CONVERSION[stat_numbers[3]] + PERMISSION_CONVERSION[stat_numbers[4]] + PERMISSION_CONVERSION[stat_numbers[5]]
+
+    long_format_list << { blocks_size: file_stat.blocks, permission: file_stat_chars, hard_link: file_stat.nlink.to_s, user: Etc.getpwuid(file_stat.uid).name,
+                          group: Etc.getgrgid(file_stat.gid).name, file_size: file_stat.size.to_s, time: file_stat.mtime.strftime('%b %d %R'), file_name: file }
+  end
+  long_format_list
+end
+
+def fetch_file_name_list
+  Dir.foreach(fetch_directory).to_a.reject { |file_name| file_name.start_with?('.') }.sort
+end
+
+def fetch_directory
+  if ARGV[1]
+    ARGV[1]
+  elsif ARGV[0].nil? || ARGV[0].start_with?('-')
+    '.'
+  else
+    ARGV[0]
+  end
+end
+
+main
