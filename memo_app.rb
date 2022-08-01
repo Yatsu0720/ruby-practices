@@ -12,7 +12,7 @@ conn = PG.connect(dbname: db)
 
 get '/memos' do
   conn.exec('SELECT * FROM memo_data') do |result|
-    @memo_data = result.map do |row|
+    @memos = result.map do |row|
       row
     end
   end
@@ -32,10 +32,10 @@ get '/memos/:id' do
   @memo_id = params[:id]
 
   conn.exec('SELECT * FROM memo_data WHERE memo_id = $1', [@memo_id.to_s]) do |result|
-    @memo_data = result.map { |row| row }
+    @memos = result.map { |row| row }
   end
-  @memo_title = @memo_data[0]['memo_title']
-  @memo_body = @memo_data[0]['memo_body']
+  @memo_title = @memos[0]['memo_title']
+  @memo_body = @memos[0]['memo_body']
 
   @title = @memo_title
 
@@ -46,11 +46,11 @@ get '/memos/:id/edit' do
   @memo_id = params[:id]
 
   conn.exec('SELECT * FROM memo_data WHERE memo_id = $1', [@memo_id.to_s]) do |result|
-    @memo_data = result.map { |row| row }
+    @memos = result.map { |row| row }
   end
 
-  @memo_title = @memo_data[0]['memo_title']
-  @memo_body = @memo_data[0]['memo_body']
+  @memo_title = @memos[0]['memo_title']
+  @memo_body = @memos[0]['memo_body']
 
   @title = "Edit:#{@memo_title}"
 
@@ -62,11 +62,9 @@ post '/memos' do
   @memo_body = h(params[:memo_body]).to_s
   @memo_id = h(params[:id]).to_s
 
-  conn.exec("INSERT INTO memo_data (memo_title, memo_body, memo_id)  VALUES ( '#{@memo_title}', '#{@memo_body}', '#{@memo_id}');")
+  conn.exec("INSERT INTO memo_data (memo_title, memo_body, memo_id)  VALUES ( '#{@memo_title}', '#{@memo_body}', '#{@memo_id}')")
 
   redirect '/memos'
-
-  erb :index
 end
 
 patch '/memos/:id' do
@@ -79,20 +77,16 @@ patch '/memos/:id' do
   )
 
   redirect "/memos/#{@memo_id}"
-
-  erb :edit
 end
 
 delete '/memos/:id' do
   @memo_id = params[:id]
 
   conn.exec('DELETE FROM memo_data WHERE memo_id = $1', [@memo_id.to_s]) do |result|
-    @memo_data = result.map { |row| row }
+    @memos = result.map { |row| row }
   end
 
   redirect '/memos'
-
-  erb :index
 end
 
 helpers do

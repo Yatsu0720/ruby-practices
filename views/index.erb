@@ -1,8 +1,8 @@
 <div>
   <ul> 
-   <% @memo_data.each do |id| %>
+   <% @memos.each do |memo| %>
         <%= '<li>' %>
-          <%= '<a href='+"http://localhost:4567/memos/#{id["memo_id"]}>#{id["memo_title"]}</a>" %>
+          <%= '<a href='+"http://localhost:4567/memos/#{memo["memo_id"]}>#{memo["memo_title"]}</a>" %>
         <%= '</li>' %>
    <% end %>    
   </ul>
