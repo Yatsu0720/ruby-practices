@@ -94,9 +94,10 @@ end
 
 def convert_file_stat_chars(file_stat)
   file_type = FILE_STAT_CONVERSION[file_stat.mode.to_s(8).rjust(6, '0')[0, 2]]
-  owner_permission = PERMISSION_CONVERSION[file_stat.mode.to_s(8).rjust(6, '0')[3]]
-  group_permission = PERMISSION_CONVERSION[file_stat.mode.to_s(8).rjust(6, '0')[4]]
-  other_permission = PERMISSION_CONVERSION[file_stat.mode.to_s(8).rjust(6, '0')[5]]
+  converted_file_stat = file_stat.mode.to_s(8).rjust(6, '0')
+  owner_permission = PERMISSION_CONVERSION[converted_file_stat[3]]
+  group_permission = PERMISSION_CONVERSION[converted_file_stat[4]]
+  other_permission = PERMISSION_CONVERSION[converted_file_stat[5]]
   file_type + owner_permission + group_permission + other_permission
 end
 
