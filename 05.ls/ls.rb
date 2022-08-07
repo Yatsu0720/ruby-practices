@@ -43,11 +43,11 @@ def print_file_list(file_stats)
   hard_link_padding, user_padding, group_padding, file_size_padding = calculate_padding(file_stats)
   files_list = make_file_stat_list(file_stats)
   files_list.each do |file_list|
-    print file_list[:permission].ljust(10, ' ')
-    print file_list[:hard_link].rjust(hard_link_padding, ' ')
-    print file_list[:user].rjust(user_padding, ' ')
-    print file_list[:group].rjust(group_padding, ' ')
-    print file_list[:file_size].rjust(file_size_padding, ' ')
+    print file_list[:permission]
+    print file_list[:hard_link].rjust(hard_link_padding)
+    print file_list[:user].rjust(user_padding)
+    print file_list[:group].rjust(group_padding)
+    print file_list[:file_size].rjust(file_size_padding)
     print file_list[:time]
     puts file_list[:file_name]
   end
@@ -55,26 +55,16 @@ end
 
 def calculate_padding(file_stats)
   classified_list = classify_list(file_stats)
-  margin = margin_list
   hard_link_max_characters = classified_list[:hard_link].flatten.max_by(&:length).length.to_i
   user_max_characters = classified_list[:user].flatten.max_by(&:length).length.to_i
   group_max_characters = classified_list[:group].flatten.max_by(&:length).length.to_i
   file_size_max_characters = classified_list[:file_size].flatten.max_by(&:length).length.to_i
 
-  hard_link_padding = hard_link_max_characters + margin[:hard_link]
-  user_padding = user_max_characters + margin[:user]
-  group_padding = group_max_characters + margin[:group]
-  file_size_padding = file_size_max_characters + margin[:file_size]
+  hard_link_padding = hard_link_max_characters + 1
+  user_padding = user_max_characters + 1
+  group_padding = group_max_characters + 2
+  file_size_padding = file_size_max_characters + 2
   [hard_link_padding, user_padding, group_padding, file_size_padding]
-end
-
-def margin_list
-  margin = {}
-  margin[:hard_link] = 1
-  margin[:user] = 1
-  margin[:group] = 2
-  margin[:file_size] = 2
-  margin
 end
 
 def classify_list(file_stats)
