@@ -9,10 +9,14 @@ PERMISSION_CONVERSION = { '0' => '---', '1' => '--x', '2' => '-w-', '3' => '-wx'
 FILE_STAT_CONVERSION = { '10' => '-', '04' => 'd', '12' => 'l' }.freeze
 
 def main
-  options = ARGV.getopts('l')
+  l_command = false
+  opts = OptionParser.new
+  opts.on('-l'){l_command = true}
+  opts.parse!(ARGV)
+
   file_stats = fetch_file_stat_list[0]
   total_block_size = make_file_stat_list(file_stats).sum { |block_size| block_size[:blocks_size] }
-  if options['l']
+  if l_command
     puts("total #{total_block_size}")
     print_file_list(file_stats)
   else
@@ -102,22 +106,13 @@ def convert_file_stat_chars(file_stat)
 end
 
 def fetch_file_stat_list
-  Dir.chdir(aquire_directory) do
+  ls_dir = ARGV[0] || '.'
+  Dir.chdir(ls_dir) do
     file_names = Dir.glob('*').sort
     files_stat = file_names.map do |file|
-      File.stat("#{Dir.pwd}/#{file}")
+      File.stat("#{ls_dir}/#{file}")
     end
     return files_stat, file_names
-  end
-end
-
-def aquire_directory
-  if ARGV[1]
-    ARGV[1]
-  elsif ARGV[0].nil? || ARGV[0].start_with?('-')
-    '.'
-  else
-    ARGV[0]
   end
 end
 
