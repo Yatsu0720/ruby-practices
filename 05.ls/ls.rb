@@ -10,22 +10,21 @@ FILE_STAT_CONVERSION = { '10' => '-', '04' => 'd', '12' => 'l' }.freeze
 
 def main
   l_command = false
+
   opts = OptionParser.new
-  opts.on('-l'){l_command = true}
+  opts.on('-l') { l_command = true }
   opts.parse!(ARGV)
 
-  file_stats = fetch_file_stat_list[0]
-  total_block_size = make_file_stat_list(file_stats).sum { |block_size| block_size[:blocks_size] }
+  file_stats = make_file_stats
   if l_command
-    puts("total #{total_block_size}")
-    print_file_list(file_stats)
+    print_files(file_stats)
   else
-    output_no_option
+    output_no_option(file_stats)
   end
 end
 
-def output_no_option
-  file_names = fetch_file_stat_list[1]
+def output_no_option(file_stats)
+  file_names = file_stats.map { |file_stat| file_stat[:file_name] }
   max_word_of_characters = file_names.max_by(&:length).length
   max_row = file_names.size / MAX_COLUMN + 1
 
@@ -39,51 +38,39 @@ def output_no_option
   puts formatted_list.transpose.map(&:join)
 end
 
-def print_file_list(file_stats)
+def print_files(file_stats)
   hard_link_padding, user_padding, group_padding, file_size_padding = calculate_padding(file_stats)
-  files_list = make_file_stat_list(file_stats)
-  files_list.each do |file_list|
-    print file_list[:permission]
-    print file_list[:hard_link].rjust(hard_link_padding)
-    print file_list[:user].rjust(user_padding)
-    print file_list[:group].rjust(group_padding)
-    print file_list[:file_size].rjust(file_size_padding)
-    print file_list[:time]
-    puts file_list[:file_name]
+  total_block_size = file_stats.sum { |block_size| block_size[:blocks_size] }
+  puts("total #{total_block_size}")
+  file_stats.each do |file_stat|
+    print file_stat[:permission]
+    print "#{file_stat[:hard_link].rjust(hard_link_padding)} "
+    print file_stat[:user].ljust(user_padding)
+    print file_stat[:group].ljust(group_padding)
+    print file_stat[:file_size].rjust(file_size_padding)
+    print file_stat[:time]
+    puts file_stat[:file_name]
   end
 end
 
 def calculate_padding(file_stats)
-  classified_list = classify_list(file_stats)
-  hard_link_max_characters = classified_list[:hard_link].flatten.max_by(&:length).length.to_i
-  user_max_characters = classified_list[:user].flatten.max_by(&:length).length.to_i
-  group_max_characters = classified_list[:group].flatten.max_by(&:length).length.to_i
-  file_size_max_characters = classified_list[:file_size].flatten.max_by(&:length).length.to_i
-
-  hard_link_padding = hard_link_max_characters + 1
-  user_padding = user_max_characters + 1
-  group_padding = group_max_characters + 2
-  file_size_padding = file_size_max_characters + 2
+  max_lengths = calculate_max_length(file_stats)
+  hard_link_padding = max_lengths[:hard_link] + 1
+  user_padding = max_lengths[:user] + 1
+  group_padding = max_lengths[:group] + 2
+  file_size_padding = max_lengths[:file_size] + 2
   [hard_link_padding, user_padding, group_padding, file_size_padding]
 end
 
-def classify_list(file_stats)
-  array = make_file_stat_list(file_stats)
-  {}.merge(*array) { |_key, former_value, after_value| [former_value, after_value] }
-end
-
-def make_file_stat_list(file_stats)
-  file_name = fetch_file_stat_list[1]
-  file_stats.map.with_index do |file_stat, i|
-    { blocks_size: file_stat.blocks,
-      permission: convert_file_stat_chars(file_stat),
-      hard_link: file_stat.nlink.to_s,
-      user: Etc.getpwuid(file_stat.uid).name,
-      group: Etc.getgrgid(file_stat.gid).name,
-      file_size: file_stat.size.to_s,
-      time: file_stat.mtime.strftime(' %b %e %R '),
-      file_name: file_name[i] }
+def calculate_max_length(files_stats)
+  max_lengths = {}
+  files_stats.each do |hash|
+    max_lengths[:hard_link] = [max_lengths[:hard_link].to_i.size, hash[:hard_link].to_i.size].max
+    max_lengths[:user] = [max_lengths[:user].to_i.size, hash[:user].to_i.size].max
+    max_lengths[:group] = [max_lengths[:group].to_i.size, hash[:group].size.to_i].max
+    max_lengths[:file_size] = [max_lengths[:file_size].to_i.size, hash[:file_size].to_i.size].max
   end
+  max_lengths
 end
 
 def convert_file_stat_chars(file_stat)
@@ -95,15 +82,30 @@ def convert_file_stat_chars(file_stat)
   file_type + owner_permission + group_permission + other_permission
 end
 
-def fetch_file_stat_list
-  ls_dir = ARGV[0] || '.'
-  Dir.chdir(ls_dir) do
-    file_names = Dir.glob('*').sort
-    files_stat = file_names.map do |file|
-      File.stat("#{ls_dir}/#{file}")
-    end
-    return files_stat, file_names
+def make_file_stats
+  files = fetch_files
+  files.map do |file|
+    file_stat = File.stat(file)
+    file_stats = {}
+    file_stats[:blocks_size] = file_stat.blocks
+    file_stats[:permission] = convert_file_stat_chars(file_stat)
+    file_stats[:hard_link] = file_stat.nlink.to_s
+    file_stats[:user] = Etc.getpwuid(file_stat.uid).name
+    file_stats[:group] = Etc.getgrgid(file_stat.gid).name
+    file_stats[:file_size] = file_stat.size.to_s
+    file_stats[:time] = file_stat.mtime.strftime(' %b %e %R ')
+    file_stats[:file_name] = File.basename(file)
+    file_stats
   end
+end
+
+def fetch_files
+  opts = OptionParser.new
+  opts.on('-l')
+  opts.parse!(ARGV) || '.'
+  ls_dir ||= ARGV[0] || '.'
+  Dir.chdir(ls_dir)
+  Dir.glob('*').sort
 end
 
 main
