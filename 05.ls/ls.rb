@@ -3,7 +3,6 @@
 
 require 'optparse'
 require 'etc'
-require 'debug'
 
 MAX_COLUMN = 3
 PERMISSION_CONVERSION = { '0' => '---', '1' => '--x', '2' => '-w-', '3' => '-wx', '4' => 'r--', '5' => 'r-x', '6' => 'rw-', '7' => 'rwx' }.freeze
@@ -94,7 +93,7 @@ end
 
 def fetch_files(ls_dir)
   Dir.chdir(ls_dir) do
-    files = Dir.glob("*").sort.map do |file|
+    Dir.glob('*').sort.map do |file|
       "#{ls_dir}/#{file}"
     end
   end
