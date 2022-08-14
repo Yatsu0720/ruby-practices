@@ -9,22 +9,21 @@ PERMISSION_CONVERSION = { '0' => '---', '1' => '--x', '2' => '-w-', '3' => '-wx'
 FILE_STAT_CONVERSION = { '10' => '-', '04' => 'd', '12' => 'l' }.freeze
 
 def main
-  l_option = false
+  l_command = false
 
   opts = OptionParser.new
-  opts.on('-l') { l_option = true }
-  opts.parse!(ARGV) || '.'
-  ls_dir = ARGV[0] || '.'
+  opts.on('-l') { l_command = true }
+  opts.parse!(ARGV)
 
-  file_stats = make_file_stats(ls_dir)
-  if l_option
-    print_l_option_files(file_stats)
+  file_stats = make_file_stats
+  if l_command
+    print_files(file_stats)
   else
-    print_no_option_files(file_stats)
+    output_no_option(file_stats)
   end
 end
 
-def print_no_option_files(file_stats)
+def output_no_option(file_stats)
   file_names = file_stats.map { |file_stat| file_stat[:file_name] }
   max_word_of_characters = file_names.max_by(&:length).length
   max_row = file_names.size / MAX_COLUMN + 1
@@ -39,28 +38,37 @@ def print_no_option_files(file_stats)
   puts formatted_list.transpose.map(&:join)
 end
 
-def print_l_option_files(file_stats)
-  max_lengths = calculate_max_length(file_stats)
+def print_files(file_stats)
+  hard_link_padding, user_padding, group_padding, file_size_padding = calculate_padding(file_stats)
   total_block_size = file_stats.sum { |block_size| block_size[:blocks_size] }
-  puts "total #{total_block_size}"
+  puts("total #{total_block_size}")
   file_stats.each do |file_stat|
     print file_stat[:permission]
-    print "#{file_stat[:hard_link].to_s.rjust(max_lengths[:hard_link] + 1)} "
-    print file_stat[:user].ljust(max_lengths[:user] + 2)
-    print file_stat[:group].ljust(max_lengths[:group] + 2)
-    print file_stat[:file_size].to_s.rjust(max_lengths[:file_size])
-    print file_stat[:time].strftime(' %b %e %R ')
+    print "#{file_stat[:hard_link].rjust(hard_link_padding)} "
+    print file_stat[:user].ljust(user_padding)
+    print file_stat[:group].ljust(group_padding)
+    print file_stat[:file_size].rjust(file_size_padding)
+    print file_stat[:time]
     puts file_stat[:file_name]
   end
+end
+
+def calculate_padding(file_stats)
+  max_lengths = calculate_max_length(file_stats)
+  hard_link_padding = max_lengths[:hard_link] + 1
+  user_padding = max_lengths[:user] + 1
+  group_padding = max_lengths[:group] + 2
+  file_size_padding = max_lengths[:file_size] + 2
+  [hard_link_padding, user_padding, group_padding, file_size_padding]
 end
 
 def calculate_max_length(files_stats)
   max_lengths = {}
   files_stats.each do |hash|
-    max_lengths[:hard_link] = [max_lengths[:hard_link].to_i, hash[:hard_link].to_s.size].max
-    max_lengths[:user] = [max_lengths[:user].to_i, hash[:user].size].max
-    max_lengths[:group] = [max_lengths[:group].to_i, hash[:group].size].max
-    max_lengths[:file_size] = [max_lengths[:file_size].to_i, hash[:file_size].to_s.size].max
+    max_lengths[:hard_link] = [max_lengths[:hard_link].to_i.size, hash[:hard_link].to_i.size].max
+    max_lengths[:user] = [max_lengths[:user].to_i.size, hash[:user].to_i.size].max
+    max_lengths[:group] = [max_lengths[:group].to_i.size, hash[:group].size.to_i].max
+    max_lengths[:file_size] = [max_lengths[:file_size].to_i.size, hash[:file_size].to_i.size].max
   end
   max_lengths
 end
@@ -74,25 +82,30 @@ def convert_file_stat_chars(file_stat)
   file_type + owner_permission + group_permission + other_permission
 end
 
-def make_file_stats(ls_dir)
-  files = fetch_files(ls_dir)
+def make_file_stats
+  files = fetch_files
   files.map do |file|
     file_stat = File.stat(file)
     file_stats = {}
     file_stats[:blocks_size] = file_stat.blocks
     file_stats[:permission] = convert_file_stat_chars(file_stat)
-    file_stats[:hard_link] = file_stat.nlink
+    file_stats[:hard_link] = file_stat.nlink.to_s
     file_stats[:user] = Etc.getpwuid(file_stat.uid).name
     file_stats[:group] = Etc.getgrgid(file_stat.gid).name
-    file_stats[:file_size] = file_stat.size
-    file_stats[:time] = file_stat.mtime
+    file_stats[:file_size] = file_stat.size.to_s
+    file_stats[:time] = file_stat.mtime.strftime(' %b %e %R ')
     file_stats[:file_name] = File.basename(file)
     file_stats
   end
 end
 
-def fetch_files(ls_dir)
-  Dir.glob("#{ls_dir}/*").sort
+def fetch_files
+  opts = OptionParser.new
+  opts.on('-l')
+  opts.parse!(ARGV) || '.'
+  ls_dir ||= ARGV[0] || '.'
+  Dir.chdir(ls_dir)
+  Dir.glob('*').sort
 end
 
 main
