@@ -1,4 +1,3 @@
-#!/usr/bin/env ruby
 # frozen_string_literal: true
 
 require 'optparse'
@@ -9,22 +8,20 @@ PERMISSION_CONVERSION = { '0' => '---', '1' => '--x', '2' => '-w-', '3' => '-wx'
 FILE_STAT_CONVERSION = { '10' => '-', '04' => 'd', '12' => 'l' }.freeze
 
 def main
-  l_option = false
-
+  params = ARGV.getopts('arl')
   opts = OptionParser.new
-  opts.on('-l') { l_option = true }
   opts.parse!(ARGV) || '.'
   ls_dir = ARGV[0] || '.'
 
-  file_stats = make_file_stats(ls_dir)
-  if l_option
+  file_stats = make_file_stats(ls_dir, params)
+  if params['l']
     print_l_option_files(file_stats)
   else
-    print_no_option_files(file_stats)
+    print_not_l_option_files(file_stats)
   end
 end
 
-def print_no_option_files(file_stats)
+def print_not_l_option_files(file_stats)
   file_names = file_stats.map { |file_stat| file_stat[:file_name] }
   max_word_of_characters = file_names.max_by(&:length).length
   max_row = file_names.size / MAX_COLUMN + 1
@@ -49,7 +46,7 @@ def print_l_option_files(file_stats)
     print file_stat[:user].ljust(max_lengths[:user] + 2)
     print file_stat[:group].ljust(max_lengths[:group] + 2)
     print file_stat[:file_size].to_s.rjust(max_lengths[:file_size])
-    print file_stat[:time].strftime(' %b %e %R ')
+    print file_stat[:time].strftime(' %_m %e %R ')
     puts file_stat[:file_name]
   end
 end
@@ -74,8 +71,8 @@ def convert_file_stat_chars(file_stat)
   file_type + owner_permission + group_permission + other_permission
 end
 
-def make_file_stats(ls_dir)
-  files = fetch_files(ls_dir)
+def make_file_stats(ls_dir, params)
+  files = fetch_files(ls_dir, params)
   files.map do |file|
     file_stat = File.stat(file)
     file_stats = {}
@@ -91,8 +88,18 @@ def make_file_stats(ls_dir)
   end
 end
 
-def fetch_files(ls_dir)
-  Dir.glob("#{ls_dir}/*").sort
+def fetch_files(ls_dir, params)
+  files = if params['a']
+            Dir.glob("#{ls_dir}/*", File::FNM_DOTMATCH).sort
+          else
+            Dir.glob("#{ls_dir}/*").sort
+          end
+
+  if params['r']
+    files.reverse
+  else
+    files
+  end
 end
 
 main
