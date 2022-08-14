@@ -3,6 +3,7 @@
 
 require 'optparse'
 require 'etc'
+require 'debug'
 
 MAX_COLUMN = 3
 PERMISSION_CONVERSION = { '0' => '---', '1' => '--x', '2' => '-w-', '3' => '-wx', '4' => 'r--', '5' => 'r-x', '6' => 'rw-', '7' => 'rwx' }.freeze
@@ -14,7 +15,7 @@ def main
   opts = OptionParser.new
   opts.on('-l') { l_option = true }
   opts.parse!(ARGV) || '.'
-  ls_dir ||= ARGV[0] || '.'
+  ls_dir = ARGV[0] || '.'
 
   file_stats = make_file_stats(ls_dir)
   if l_option
@@ -92,11 +93,7 @@ def make_file_stats(ls_dir)
 end
 
 def fetch_files(ls_dir)
-  Dir.chdir(ls_dir) do
-    Dir.glob('*').sort.map do |file|
-      "#{ls_dir}/#{file}"
-    end
-  end
+  Dir.glob("#{ls_dir}/*").sort
 end
 
 main
